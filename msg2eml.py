@@ -6,8 +6,6 @@
 # https://msdn.microsoft.com/en-us/library/cc463900(v=exchg.80).aspx
 # https://msdn.microsoft.com/en-us/library/ee157583(v=exchg.80).aspx
 # https://blogs.msdn.microsoft.com/openspecification/2009/11/06/msg-file-format-part-1/
-# pip install compoundfiles compressed_rtf streamlit
-
 
 import re
 import sys
@@ -20,11 +18,6 @@ from email.utils import parsedate_to_datetime, formatdate, formataddr
 
 import compoundfiles
 
-import email.utils
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.mime.base import MIMEBase
-from email import encoders
 
 # MAIN FUNCTIONS
 
@@ -50,38 +43,72 @@ def load_message_stream(entry, is_top_level, doc):
     props = parse_properties(entry["__properties_version1.0"], is_top_level, entry, doc)
 
     # Construct the MIME message....
-    msg = MIMEMultipart()
+    msg = email.message.EmailMessage()
 
     # Add the raw headers, if known.
     if "TRANSPORT_MESSAGE_HEADERS" in props:
+        # Get the string holding all of the headers.
         headers = props["TRANSPORT_MESSAGE_HEADERS"]
         if isinstance(headers, bytes):
             headers = headers.decode("utf-8")
+
+        # Remove content-type header because the body we can get this
+        # way is just the plain-text portion of the email and whatever
+        # Content-Type header was in the original is not valid for
+        # reconstructing it this way.
+        headers = re.sub("Content-Type: .*(\n\s.*)*\n", "", headers, re.I)
+
+        # Parse them.
         headers = email.parser.HeaderParser(policy=email.policy.default).parsestr(
             headers
         )
+
+        # Copy them into the message object.
         for header, value in headers.items():
-            if (
-                header.lower() != "content-type"
-            ):  # Skip Content-Type as we'll set it later
-                msg[header] = value
+            msg[header] = value
+
     else:
         # Construct common headers from metadata.
-        msg["Date"] = email.utils.formatdate(props["MESSAGE_DELIVERY_TIME"].timestamp())
-        msg["From"] = email.utils.formataddr((props["SENDER_NAME"], ""))
+
+        msg["Date"] = formatdate(props["MESSAGE_DELIVERY_TIME"].timestamp())
+        del props["MESSAGE_DELIVERY_TIME"]
+
+        if props["SENDER_NAME"] != props["SENT_REPRESENTING_NAME"]:
+            props["SENDER_NAME"] += " (" + props["SENT_REPRESENTING_NAME"] + ")"
+        del props["SENT_REPRESENTING_NAME"]
+        msg["From"] = formataddr((props["SENDER_NAME"], ""))
+        del props["SENDER_NAME"]
+
         msg["To"] = props["DISPLAY_TO"]
+        del props["DISPLAY_TO"]
+
         msg["CC"] = props["DISPLAY_CC"]
+        del props["DISPLAY_CC"]
+
         msg["BCC"] = props["DISPLAY_BCC"]
+        del props["DISPLAY_BCC"]
+
         msg["Subject"] = props["SUBJECT"]
+        del props["SUBJECT"]
 
     # Add the plain-text body from the BODY field.
     if "BODY" in props:
         body = props["BODY"]
         if isinstance(body, str):
-            msg.attach(MIMEText(body, "plain", "utf-8"))
+            msg.set_content(body, cte="quoted-printable")
         else:
-            msg.attach(MIMEText(body.decode("utf-8"), "plain", "utf-8"))
-    elif "RTF_COMPRESSED" in props:
+            msg.set_content(body, maintype="text", subtype="plain", cte="8bit")
+
+    # Plain-text is not availabe. Use the rich text version.
+    else:
+        doc.rtf_attachments += 1
+        fn = "messagebody_{}.rtf".format(doc.rtf_attachments)
+
+        msg.set_content(
+            "<no plain text message body --- see attachment {}>".format(fn),
+            cte="quoted-printable",
+        )
+
         # Decompress the value to Rich Text Format.
         import compressed_rtf
 
@@ -89,11 +116,13 @@ def load_message_stream(entry, is_top_level, doc):
         rtf = compressed_rtf.decompress(rtf)
 
         # Add RTF file as an attachment.
-        part = MIMEBase("text", "rtf")
-        part.set_payload(rtf)
-        encoders.encode_base64(part)
-        part.add_header("Content-Disposition", "attachment", filename="message.rtf")
-        msg.attach(part)
+        msg.add_attachment(rtf, maintype="text", subtype="rtf", filename=fn)
+
+    # # Copy over string values of remaining properties as headers
+    # # so we don't lose any information.
+    # for k, v in props.items():
+    #   if k == 'RTF_COMPRESSED': continue # not interested, save output
+    #   msg[k] = str(v)
 
     # Add attachments.
     for stream in entry:
@@ -119,16 +148,20 @@ def process_attachment(msg, entry, doc):
     if isinstance(mime_type, bytes):
         mime_type = mime_type.decode("utf8")
 
-    # Create attachment part
-    part = MIMEBase(*mime_type.split("/", 1))
-    part.set_payload(blob)
-    encoders.encode_base64(part)
+    filename = urllib.parse.quote_plus(filename)
 
-    # Add header
-    part.add_header("Content-Disposition", "attachment", filename=filename)
-
-    # Attach to the main message
-    msg.attach(part)
+    # Python 3.6.
+    if isinstance(blob, str):
+        msg.add_attachment(blob, filename=filename)
+    elif isinstance(blob, bytes):
+        msg.add_attachment(
+            blob,
+            maintype=mime_type.split("/", 1)[0],
+            subtype=mime_type.split("/", 1)[-1],
+            filename=filename,
+        )
+    else:  # a Message instance
+        msg.add_attachment(blob, filename=filename)
 
 
 def parse_properties(properties, is_top_level, container, doc):
