@@ -1,0 +1,27 @@
+function e {
+    explorer.exe (Get-Location)
+}
+
+# touch 명령어
+function touch {
+    param(
+        [string]$path
+    )
+    if (-Not (Test-Path $path)) {
+        New-Item -ItemType File -Path $path
+    } else {
+        # Update the last write time to simulate touch behavior
+        (Get-Item $path).LastWriteTime = Get-Date
+    }
+}
+
+# rm 명령어
+Set-Alias rm Remove-Item -Option AllScope
+
+# deldir 명령어
+function deldir {
+    param(
+        [string]$folder
+    )
+    Remove-Item -Recurse -Force $folder
+}
