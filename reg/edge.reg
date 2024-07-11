@@ -1,4 +1,4 @@
 Windows Registry Editor Version 5.00
 
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Ext\CLSID]
-"{1FD49718-1D00-4B19-AF5F-070AF6D5D54C}"=dword:00000000
+"{1FD49718-1D00-4B19-AF5F-070AF6D5D54C}"=dword:00000001
