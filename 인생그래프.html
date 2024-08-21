@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<!-- HTML5 문서 형식을 선언합니다. -->
+<html lang="en">
+<!-- 문서의 기본 언어를 영어로 설정합니다. -->
+
+<head>
+  <!-- Google Analytics 스크립트는 현재 주석 처리되어 비활성화 상태입니다. -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XSPGND1PG7"></script> -->
+  <!-- <script>
+    window.dataLayer = window.dataLayer || []; // dataLayer 배열을 초기화합니다.
+    function gtag() { dataLayer.push(arguments); } // GA 이벤트를 dataLayer에 추가하는 함수입니다.
+    gtag('js', new Date()); // 현재 시간을 기록합니다.
+
+    gtag('config', 'G-XSPGND1PG7'); // GA 설정을 초기화합니다.
+  </script> -->
+  <meta charset="UTF-8"> <!-- 문서의 문자 인코딩을 UTF-8로 설정합니다. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- 반응형 디자인을 위한 뷰포트 설정입니다. -->
+  <title>Year Progress Bar</title> <!-- 웹 페이지의 제목을 설정합니다. -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Google Fonts로부터 Roboto 폰트를 불러옵니다. -->
+  <style>
+    /* 기본 HTML 및 body 스타일을 설정합니다. */
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Roboto', sans-serif;
+      background-color: #f0f0f0;
+    }
+
+    /* 메인 컨테이너의 스타일을 정의합니다. */
+    .container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 프로그레스 바 컨테이너의 스타일을 정의합니다. */
+    .progress-container {
+      width: 100%;
+      background-color: #e6e6e6;
+      border-radius: 1rem;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      margin: 20px 0;
+    }
+
+    /* 프로그레스 바의 스타일을 정의합니다. */
+    .progress-bar {
+      height: 3rem;
+      background-color: #ff0745;
+      /* background-color: #4caf50; */
+      width: 0%;
+      border-radius: 1rem;
+      background-image: linear-gradient(to right, rgba(255, 255, 255, .5) 0%, rgba(255, 255, 255, .2) 50%, rgba(255, 255, 255, .5) 100%);
+      background-repeat: no-repeat;
+      background-size: 50% 100%;
+      box-shadow: 0 0 10px rgba(0, 0, 0, .2);
+      position: relative;
+      overflow: hidden;
+      transition: width 0.5s ease-in-out;
+    }
+
+    /* 프로그레스 바에 반짝이는 효과를 추가합니다. */
+    .progress-bar::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      background: linear-gradient(to right, transparent, rgba(255, 255, 255, .6), transparent);
+      width: 100%;
+      transform: translateX(-100%);
+      animation: shimmer 2s infinite;
+    }
+
+    /* 반짝임 효과를 위한 키프레임 애니메이션을 정의합니다. */
+    @keyframes shimmer {
+      100% {
+        transform: translateX(100%);
+      }
+    }
+
+    /* 프로그레스 텍스트의 스타일을 정의합니다. */
+    .progress-text {
+      font-size: 1.5rem;
+      font-weight: 1000;
+    }
+
+    /* 푸터 섹션의 스타일을 정의합니다. */
+    footer {
+      margin-top: 20px;
+    }
+
+    /* 푸터 내 링크의 스타일을 정의합니다. */
+    footer a {
+      text-decoration: none;
+      color: #d919ff;
+      font-weight: 700;
+    }
+
+    /* 링크에 마우스를 올렸을 때의 스타일 변경을 정의합니다. */
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const updateProgress = () => {
+        const now = new Date(); // 현재 날짜와 시간을 가져옵니다.
+        const start = new Date(now.getFullYear(), 0, 1); // 현재 연도의 시작을 나타냅니다.
+        const end = new Date(now.getFullYear() + 1, 0, 1); // 다음 연도의 시작을 나타냅니다.
+        const progress = (now - start) / (end - start); // 현재 연도의 진행 상태를 계산합니다.
+        const progressBar = document.querySelector('.progress-bar'); // 프로그레스 바 요소를 선택합니다.
+        progressBar.style.width = (progress * 100).toFixed(5) + '%'; // 프로그레스 바의 너비를 업데이트합니다.
+        document.querySelector('.progress-text').textContent = `2024 is ${(progress * 100).toFixed(5)}% Complete.`; // 프로그레스 텍스트를 업데이트합니다.
+      };
+
+      setInterval(updateProgress, 1000); // 매 초마다 updateProgress 함수를 실행하여 프로그레스 바를 업데이트합니다.
+    });
+  </script>
+</head>
+
+<body>
+  <div class="container">
+    <!-- 페이지의 제목을 표시합니다 -->
+    <h1 class="text-3xl font-bold">Year Progress Bar</h1>
+    <!-- 프로그레스 바 컨테이너 -->
+    <div class="progress-container">
+      <div class="progress-bar"></div> <!-- 프로그레스 바 -->
+    </div>
+    <!-- 현재 연도의 진행 상태를 표시하는 텍스트 -->
+    <div class="progress-text">2024 is ##.#####% Complete.</div>
+    <!-- 페이지의 푸터 -->
+    <footer>
+      <!-- 인스타그램 링크 -->
+      <p>Follow me on <a href="https://www.instagram.com/" target="_blank">@aidenkim</a></p>
+      <!-- 웹사이트 링크 -->
+    </footer>
+  </div>
+</body>
+
+</html>
