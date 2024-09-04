@@ -16,10 +16,10 @@ InteractWithElements(chrome)
 {
     ; Click a button by ID
     chrome.findElementById("submit-button").Click()
-    
+
     ; Type into an input field by name
     chrome.findElementByName("search").SendKeys("AutoHotkey Selenium")
-    
+
     ; Select an option from a dropdown by CSS selector
     dropdown := chrome.findElementByCssSelector("select#country")
     dropdown.findElementByCssSelector("option[value='US']").Click()
