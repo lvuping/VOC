@@ -99,44 +99,53 @@ def set_title(company_code, date1, date2=None):
     return result
 
 
-def process_excel_rows(server, server_name, start_row= None):
-    # Excel 파일 열기
-    if start_row:
-        current_row = start_row
-    else:
-        current_row = 2
+def find_start_row(sheet):
+    current_row = 2
+    while sheet[f'A{current_row}'].value is not None:
+        if sheet[f'D{current_row}'].value != 'X':
+            return current_row
+        current_row += 1
+    return current_row
 
+def process_excel_rows(server, server_name, start_row=None):
     fileName = server + '.xlsx'
     workbook = openpyxl.load_workbook(fileName)
-
-    # 활성화된 시트 선택
     sheet = workbook.active
 
-
+    if start_row is None:
+        current_row = find_start_row(sheet)
+    else:
+        current_row = start_row
 
     while True:
-        # A, B, C, D 열의 값을 읽음
         company_code = sheet[f'A{current_row}'].value
         date_low = sheet[f'B{current_row}'].value
         date_high = sheet[f'C{current_row}'].value
-        filename = sheet[f'D{current_row}'].value
 
-        # A열이 비어있으면 종료
         if company_code is None or company_code == "":
             break
 
-        # 여기서 a_value, b_value, c_value, d_value를 사용하여 원하는 작업을 수행
-        print(f"Row {current_row}: CODE={company_code}, Date-low={date_low}, C={date_high}, D={filename}")
+        print(f"Row {current_row}: CODE={company_code}, Date-low={date_low}, Date-high={date_high}")
 
         title = set_title(company_code, date_low, date_high)
-        # 예: 이 값들을 사용하여 다른 작업을 수행할 수 있습니다.
-        process_data(company_code,title,date_low, date_high,server_name)
+        process_data(company_code, title, date_low, date_high, server_name)
+
+        # Mark the previous row as done
+        if current_row > 2:
+            sheet[f'D{current_row - 1}'] = 'X'
 
         current_row += 1
 
+    # Mark the last processed row as done
+    if current_row > 2:
+        sheet[f'D{current_row - 1}'] = 'X'
+
+    # Save the workbook
+    workbook.save(fileName)
+
     print(f"{start_row}행부터 {current_row - 1}행까지 처리되었습니다.")
     close_sap()
-    return current_row  # 다음 시작 행 번호 반환
+    return 
 
 def copy_excel_ragne(start_row, end_row):
 
@@ -344,13 +353,7 @@ def close_sap():
 #     print(win)
 
 
-servers = {
-    'CAP': '[CS PORTAL] 아주 운영',
-    'CEP': '[CS PORTAL] 구주 운영',
-    'CLP': '[CS PORTAL] 중남미 운영',
-    'CUP': '[CS PORTAL] 미주 운영'
-}
-
+# Main execution
 for server, server_name in servers.items():
     process_excel_rows(server, server_name)
 

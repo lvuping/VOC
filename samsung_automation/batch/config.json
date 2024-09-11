@@ -1,0 +1,9 @@
+{
+  "SAP_PROGRAM_NAME": "[CIC] ALL transaction report",
+  "SERVERS": {
+    "CAP": "C550",
+    "CEP": "C780",
+    "CLP": "C820",
+    "CUP": "C310"
+  }
+}
