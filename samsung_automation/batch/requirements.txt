@@ -1,0 +1,8 @@
+openpyxl
+pyperclip
+pywin32
+pyautogui
+python-dotenv
+opencv-python
+pillow
+pyinstaller
