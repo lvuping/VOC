@@ -1,4 +1,4 @@
-```
+```bash
 pip install PyQt5
 pip install openpyxl
 pip install pywin32
@@ -8,19 +8,19 @@ pip install pyautogui
 Python 스크립트를 EXE 파일로 변환하기 위해 PyInstaller를 사용할 수 있습니다. 다음 단계를 따라주세요:
 a. PyInstaller 설치:
 
-```
+```bash
 pip install pyinstaller
 ```
 
 b. 스크립트가 있는 디렉토리로 이동:
 
-```
+```bash
 cd path/to/your/script/directory
 ```
 
 c. PyInstaller를 사용하여 EXE 파일 생성:
 
-```
+```bash
 pyinstaller --onefile --windowed your_script_name.py
 ```
 
